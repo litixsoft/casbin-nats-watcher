@@ -1,4 +1,4 @@
-module github.com/Soluto/casbin-nats-watcher
+module github.com/litixsoft/casbin-nats-watcher
 
 go 1.23
 
