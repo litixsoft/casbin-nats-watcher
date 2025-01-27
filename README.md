@@ -30,7 +30,7 @@ func main() {
 
 ## Related pojects
 - [Casbin](https://github.com/casbin/casbin)
-- [Nats.io](https://github.com/nats-io/go-nats)
+- [Nats.io](https://github.com/nats-io/nats.gos)
 
 
 ## Additional Usage Examples

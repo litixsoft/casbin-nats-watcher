@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/casbin/casbin/persist"
-	"github.com/nats-io/go-nats"
+	"github.com/casbin/casbin/v2/persist"
+	"github.com/nats-io/nats.go"
 )
 
 // Watcher implements persist.Watcher interface
@@ -20,12 +20,12 @@ type Watcher struct {
 
 // NewWatcher creates new Nats watcher.
 // Parameters:
-// - endpoint
-//		Endpoint of Nats server
-// - policyUpdatedSubject
-//      Nats subject that sends message when policy was updated externally. It leads to call of callback
-// - options
-//      Options to connect Nats like user, password, etc.
+//   - endpoint
+//     Endpoint of Nats server
+//   - policyUpdatedSubject
+//     Nats subject that sends message when policy was updated externally. It leads to call of callback
+//   - options
+//     Options to connect Nats like user, password, etc.
 func NewWatcher(endpoint string, policyUpdatedSubject string, options ...nats.Option) (persist.Watcher, error) {
 	nw := &Watcher{
 		endpoint:             endpoint,
@@ -64,10 +64,13 @@ func (w *Watcher) SetUpdateCallback(callback func(string)) error {
 // Enforcer.AddPolicy(), Enforcer.RemovePolicy(), etc.
 func (w *Watcher) Update() error {
 	if w.connection != nil && w.connection.Status() == nats.CONNECTED {
-		w.connection.Publish(w.policyUpdatedSubject, []byte(""))
+		err := w.connection.Publish(w.policyUpdatedSubject, []byte(""))
+		if err != nil {
+			return fmt.Errorf("connection.Publish error: %w", err)
+		}
 		return nil
 	}
-	return fmt.Errorf("Connection is nil or in invalid state")
+	return fmt.Errorf("connection is nil or in invalid state")
 }
 
 func (w *Watcher) connect() error {

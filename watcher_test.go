@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/casbin/casbin"
-	gnatsd "github.com/nats-io/gnatsd/test"
-	"github.com/nats-io/go-nats"
+	"github.com/casbin/casbin/v2"
+	gnatsd "github.com/nats-io/nats-server/v2/test"
+	"github.com/nats-io/nats.go"
 )
 
 func TestWatcher(t *testing.T) {
@@ -99,7 +99,7 @@ func TestWithEnforcer(t *testing.T) {
 	defer w.Close()
 
 	// Initialize the enforcer.
-	e := casbin.NewEnforcer("examples/rbac_model.conf", "examples/rbac_policy.csv")
+	e, _ := casbin.NewEnforcer("examples/rbac_model.conf", "examples/rbac_policy.csv")
 
 	// Set the watcher for the enforcer.
 	e.SetWatcher(w)
