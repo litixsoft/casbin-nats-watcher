@@ -40,12 +40,11 @@ func NewWatcher(endpoint string, policyUpdatedSubject string, options ...nats.Op
 	}
 
 	// Subscribe to updates
-	sub, err := nw.subcribeToUpdates()
+	sub, err := nw.subscribeToUpdates()
 	if err != nil {
 		return nil, err
 	}
 	nw.subscription = sub
-
 	runtime.SetFinalizer(nw, finalizer)
 
 	return nw, nil
@@ -87,7 +86,7 @@ func (w *Watcher) Close() {
 	finalizer(w)
 }
 
-func (w *Watcher) subcribeToUpdates() (*nats.Subscription, error) {
+func (w *Watcher) subscribeToUpdates() (*nats.Subscription, error) {
 	sub, err := w.connection.Subscribe(w.policyUpdatedSubject, func(msg *nats.Msg) {
 		if w.callback != nil {
 			w.callback(string(msg.Data[:]))
@@ -101,7 +100,7 @@ func (w *Watcher) subcribeToUpdates() (*nats.Subscription, error) {
 
 func finalizer(w *Watcher) {
 	if w.subscription != nil && w.subscription.IsValid() {
-		w.subscription.Unsubscribe()
+		_ = w.subscription.Unsubscribe()
 	}
 	w.subscription = nil
 

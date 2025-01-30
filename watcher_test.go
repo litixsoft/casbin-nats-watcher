@@ -25,31 +25,41 @@ func TestWatcher(t *testing.T) {
 	// Use the endpoint of nats as parameter.
 	updater, err := NewWatcher(natsEndpoint, natsSubject)
 	if err != nil {
-		t.Fatal("Failed to create updater")
+		t.Fatalf("Failed to create updater, error: %s", err)
 	}
 	defer updater.Close()
-	updater.SetUpdateCallback(func(msg string) {
+	err = updater.SetUpdateCallback(func(msg string) {
 		updaterCh <- "updater"
 	})
+	if err != nil {
+		t.Fatalf("Failed to set update callback: %s", err)
+	}
 
 	// listener represents any other Casbin enforcer instance that watches the change of policy in DB.
 	listener, err := NewWatcher(natsEndpoint, natsSubject)
 	if err != nil {
-		t.Fatal("Failed to create listener")
+		t.Fatalf("Failed to create second listener: %s", err)
 	}
+	defer listener.Close()
 
-	// listener should set a callback that gets called when policy changes.
+	// Workaround:
+	// The tests fail 50% of the time without sleep.
+	// Needs to be investigated.
+	/// TODO Find the cause
+	time.Sleep(25 * time.Millisecond)
+
+	// listener should set a callback that gets called when policy changes
 	err = listener.SetUpdateCallback(func(msg string) {
 		listenerCh <- "listener"
 	})
 	if err != nil {
-		t.Fatal("Failed to set listener callback")
+		t.Fatalf("Failed to set listener callback: %s", err)
 	}
 
 	// updater changes the policy, and sends the notifications.
 	err = updater.Update()
 	if err != nil {
-		t.Fatal("The updater failed to send Update")
+		t.Fatalf("The updater failed to send Update: %s", err)
 	}
 
 	// Validate that listener received message
@@ -60,18 +70,15 @@ func TestWatcher(t *testing.T) {
 		case res := <-listenerCh:
 			if res != "listener" {
 				t.Fatalf("Message from unknown source: %v", res)
-				break
 			}
 			listenerReceived = true
 		case res := <-updaterCh:
 			if res != "updater" {
 				t.Fatalf("Message from unknown source: %v", res)
-				break
 			}
 			updaterReceived = true
 		case <-time.After(time.Second * 10):
 			t.Fatal("Updater or listener didn't received message in time")
-			break
 		}
 		if updaterReceived && listenerReceived {
 			close(listenerCh)
@@ -94,7 +101,7 @@ func TestWithEnforcer(t *testing.T) {
 	// Use the endpoint of etcd cluster as parameter.
 	w, err := NewWatcher(natsEndpoint, natsSubject)
 	if err != nil {
-		t.Fatal("Failed to create updater")
+		t.Fatalf("Failed to create updater, error: %s", err)
 	}
 	defer w.Close()
 
