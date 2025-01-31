@@ -42,12 +42,6 @@ func TestWatcher(t *testing.T) {
 	}
 	defer listener.Close()
 
-	// Workaround:
-	// The tests fail 50% of the time without sleep.
-	// Needs to be investigated.
-	/// TODO Find the cause
-	time.Sleep(25 * time.Millisecond)
-
 	// listener should set a callback that gets called when policy changes
 	err = listener.SetUpdateCallback(func(msg string) {
 		listenerCh <- "listener"
@@ -55,6 +49,12 @@ func TestWatcher(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to set listener callback: %s", err)
 	}
+
+	// Workaround:
+	// The tests fail 50% of the time without sleep.
+	// Needs to be investigated.
+	/// TODO Find the cause
+	time.Sleep(25 * time.Millisecond)
 
 	// updater changes the policy, and sends the notifications.
 	err = updater.Update()
